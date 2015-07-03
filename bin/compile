@@ -177,10 +177,6 @@ source $BIN_DIR/steps/cryptography
 # GDAL support.
 source $BIN_DIR/steps/gdal
 
-# Install ez_setup
-puts-step "Installing ez_setup using pip version $(pip --version | awk '{print $2}')"
-pip install --use-mirrors --exists-action=w --src=./.heroku/src ez_setup | indent
-
 # Install dependencies with Pip.
 source $BIN_DIR/steps/pip-install
 
