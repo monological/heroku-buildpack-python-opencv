@@ -205,29 +205,31 @@ indent() {
   sed -u 's/^/       /'
 }
 
-build=$BUILD_DIR
-cache=$CACHE_DIR
-
 #ensure it exists
-mkdir -p ${cache}
+mkdir -p ${CACHE_DIR}
 
 cmake_version="3.2.3"
 cmake_url="http://www.cmake.org/files/v3.2/cmake-3.2.3.tar.gz"
 cmake_file="cmake-${cmake_version}.tar.gz"
 cmake_tar_dir="cmake-${cmake_version}"
+cmake_cache_target=${CACHE_DIR}/${opencv_file}
 
 opencv_version="3.0.0"
 opencv_dir="opencv-${opencv_version}"
 opencv_file="opencv-${opencv_version}.tar.gz"
 opencv_url="https://s3-ap-northeast-1.amazonaws.com/superfeed-static/opencv-${opencv_version}.zip"
+opencv_cache_target=${CACHE_DIR}/${cmake_file}
 
-cache_target=${cache}/${cmake_file}
-build_target=${build}/.heroku
+build_target=${BUILD_DIR}/.heroku
 target=/app/.heroku
+PATH=${build_target}/bin:$PATH
 
-if [ ! -f ${cache_target} ]; then
+# make the .heroku dir in build
+mkdir -p ${build_target}
+
+if [ ! -f ${cmake_cache_target} ]; then
   echo "No cached compile detected. Bulding..." | indent
-  cd $build
+  cd $BUILD_DIR
   
   echo "Compiling cmake v${cmake_version}..." | indent
   #Compile cmake
@@ -240,20 +242,16 @@ if [ ! -f ${cache_target} ]; then
   cd ..
 
   #Create cache slug
-  tar czf ${cache_target} -C ${target} .
+  tar czf ${cmake_cache_target} -C ${target} .
 fi
 
-mkdir -p ${build_target}
-tar xzf ${cache_target} -C ${build_target}
-PATH=${build_target}/bin:$PATH
+# Decompress the cached file into .heroku
+#
+tar xzf ${cmake_cache_target} -C ${build_target}
 
-cache_target=${cache}/${opencv_file}
-build_target=${build}/.heroku
-target=/app/.heroku
-
-if [ ! -f ${cache_target} ]; then
+if [ ! -f ${opencv_cache_target} ]; then
   echo "No cached compile detected. Bulding..." | indent
-  cd $build
+  cd $BUILD_DIR
 
   echo "Compiling OpenCV v${opencv_version}..." | indent
   #Compile OpenCV
@@ -268,15 +266,18 @@ if [ ! -f ${cache_target} ]; then
   cd ..
 
   #Create cache slug
-  tar czf ${cache_target} -C ${target} .
+  tar czf ${opencv_cache_target} -C ${target} .
 fi
 
-mkdir -p ${build_target}
-tar xzf ${cache_target} -C ${build_target}
+# Decompress the cached file into .heroku
+#
+tar xzf ${opencv_cache_target} -C ${build_target}
+
+# finish OpenCV installation
+
 
 # Install sane-default script for WEB_CONCURRENCY environment variable.
 cp $ROOT_DIR/vendor/python.webconcurrency.sh $WEBCONCURRENCY_PROFILE_PATH
-
 
 # Experimental post_compile hook.
 bpwatch start post_compile
