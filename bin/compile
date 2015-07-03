@@ -213,7 +213,7 @@ fi
 tar xzf ${CACHE_DIR}/opencv.tar.gz -C ${BUILD_DIR}
 
 # creating env variables
-title "Creating environment variables."
+echo "Setting up env vars..." | indent
 mkdir -p $BUILD_DIR/.profile.d
 cat <<EOF >$BUILD_DIR/.profile.d/5251124.sh
 export PYTHONPATH="\$HOME/usr/local/lib/python2.7/site-packages/:/app/.heroku/vendor/lib/:/app/.heroku/vendor/lib/python2.7/site-packages/:/app/.heroku/vendor/lib/python2.7/dist-packages/"
