@@ -212,7 +212,7 @@ if [ ! -f ${CACHE_DIR}/opencv.tar.gz ]; then
 fi
 tar xzf ${CACHE_DIR}/opencv.tar.gz -C ${BUILD_DIR}
 
-ls ${BUILD_DIR}
+ls -lah ${BUILD_DIR}
 
 # finish OpenCV
 
