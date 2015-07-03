@@ -197,7 +197,7 @@ set-default-env LANG en_US.UTF-8
 set-default-env PYTHONHASHSEED random
 set-default-env PYTHONPATH /app/
 
-#install OpenCV
+# Install OpenCV
 
 set -e
 
@@ -205,76 +205,16 @@ indent() {
   sed -u 's/^/       /'
 }
 
-#ensure it exists
-mkdir -p ${CACHE_DIR}
-
-cmake_version="3.2.3"
-cmake_url="http://www.cmake.org/files/v3.2/cmake-3.2.3.tar.gz"
-cmake_file="cmake-${cmake_version}.tar.gz"
-cmake_tar_dir="cmake-${cmake_version}"
-cmake_cache_target=${CACHE_DIR}/${opencv_file}
-
-opencv_version="3.0.0"
-opencv_dir="opencv-${opencv_version}"
-opencv_file="opencv-${opencv_version}.tar.gz"
-opencv_url="https://s3-ap-northeast-1.amazonaws.com/superfeed-static/opencv-${opencv_version}.zip"
-opencv_cache_target=${CACHE_DIR}/${cmake_file}
-
-build_target=${BUILD_DIR}/.heroku
-target=/app/.heroku
-PATH=${build_target}/bin:$PATH
-
-# make the .heroku dir in build
-mkdir -p ${build_target}
-
-if [ ! -f ${cmake_cache_target} ]; then
-  echo "No cached compile detected. Bulding..." | indent
-  cd $BUILD_DIR
-  
-  echo "Compiling cmake v${cmake_version}..." | indent
-  #Compile cmake
-  curl -s ${cmake_url} > ${cmake_file}
-  tar zxf ${cmake_file}
-  cd ${cmake_tar_dir}
-  ./bootstrap --prefix=${target} | indent
-  make | indent
-  make install | indent
-  cd ..
-
-  #Create cache slug
-  tar czf ${cmake_cache_target} -C ${target} .
+echo "Compiling OpenCV..." | indent
+if [ ! -f ${CACHE_DIR}/opencv.tar.gz ]; then
+  echo "Fetching..." | indent
+  curl -s -L "https://s3-ap-northeast-1.amazonaws.com/superfeed-static/opencv_heroku.tar.gz" > ${CACHE_DIR}/opencv.tar.gz
 fi
+tar xzf ${CACHE_DIR}/opencv.tar.gz -C ${BUILD_DIR}
 
-# Decompress the cached file into .heroku
-#
-tar xzf ${cmake_cache_target} -C ${build_target}
+ls ${BUILD_DIR}
 
-if [ ! -f ${opencv_cache_target} ]; then
-  echo "No cached compile detected. Bulding..." | indent
-  cd $BUILD_DIR
-
-  echo "Compiling OpenCV v${opencv_version}..." | indent
-  #Compile OpenCV
-  curl -s ${opencv_url} > ${opencv_file}
-  #tar xf ${opencv_file}
-  unzip ${opencv_file}
-  cd ${opencv_dir}
-  mkdir build
-  cd build
-  cmake -DCMAKE_INSTALL_PREFIX=${target} -DCMAKE_FIND_ROOT_PATH=${target} -DCMAKE_BUILD_TYPE=RELEASE -DBUILD_SHARED_LIBS=OFF  -DBUILD_NEW_PYTHON_SUPPORT=ON -DBUILD_EXAMPLES=ON -DCMAKE_SHARED_LINKER_FLAGS="-fPIC" .. | indent
-  make install | indent
-  cd ..
-
-  #Create cache slug
-  tar czf ${opencv_cache_target} -C ${target} .
-fi
-
-# Decompress the cached file into .heroku
-#
-tar xzf ${opencv_cache_target} -C ${build_target}
-
-# finish OpenCV installation
-
+# finish OpenCV
 
 # Install sane-default script for WEB_CONCURRENCY environment variable.
 cp $ROOT_DIR/vendor/python.webconcurrency.sh $WEBCONCURRENCY_PROFILE_PATH
